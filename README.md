@@ -1,38 +1,44 @@
-# Web Server Development in ASP.NET Core
+# Movie Characters API
 
-Create a database with EF Core
-Create a ASP.NET Core web API
-Document a web API using Swagger/OpenAPI
+This is the third assignment in the backend module of Noroff's full stack development course. See assignment description [here](https://github.com/DamianRavn/Assignment7-Web-Server-Development-in-ASP.NET-Core/blob/main/Project/Assignment%203_CSharp_Web_API_creation_in_ASP.NET_Core.pdf).
 
 ## Description
 
-This project is split into two parts. Part 1 is creating a database and inserting data. Part 2 is Reading data from a database.
+The assignment has 3 parts:
+
+- Create a database with EF Core.
+
+- Create an ASP.NET Core web API.
+
+- Document the web API using Swagger/OpenAPI.
 
 ## Getting Started
 
-Use an IDE like VS.
+Use an IDE like Visual Studio.
 
 ### Dependencies
 
-* .Net 5
+- .Net 5
+- SQLServer
 
-### Installing
+### Install
 
-* Clone the folder into your system.
-* Run the project from your IDE
+Clone or download repository.
 
-### Executing program
+### Usage
 
-* Compile into an executable and run it normaly depending on your operating system.
+1. Open solution in Visual Studio
+2. IMPORTANT: Change value of `Data Source` inside the connection string `"DefaultConnection"` in `apsettings.json` to the name of the server you want to host the movie characters database on (e.g. the name of your PC for localhost).
+3. Build & run solution.
 
 ## Help
 
-Contact [@DamianRavn](https://github.com/DamianRavn) or [@Frosti Hallfridarson](https://github.com/Maxius0) if something goes wrong.
+Contact [Damian Ravn](https://github.com/DamianRavn) or [Marius Samson](https://github.com/Maxius0) if something goes wrong.
 
 ## Authors
 
-* [@DamianRavn](https://github.com/DamianRavn)
-* [@Marius Samson](https://github.com/Maxius0)
+- [Damian Ravn](https://github.com/DamianRavn)
+- [Marius Samson](https://github.com/Maxius0)
 
 ## License
 
