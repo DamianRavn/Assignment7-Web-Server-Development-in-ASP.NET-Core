@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 using MovieCharactersAPI.Models;
+using AutoMapper;
+using MovieCharactersAPI.Models.DTO.Character;
 
 namespace MovieCharactersAPI.Controllers
 {
@@ -15,26 +17,31 @@ namespace MovieCharactersAPI.Controllers
     public class CharactersController : ControllerBase
     {
         private readonly CharacterDbContext _context;
+        private readonly IMapper _mapper;
 
-        public CharactersController(CharacterDbContext context)
+        // Adding context and mapper with dependency injection.
+        public CharactersController(CharacterDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         // GET: api/Characters
         /// <summary>
-        /// Retrieves all characters in the database.
+        /// Fetches all characters in the database.
         /// </summary>
-        /// <returns>A collection of all characters.</returns>
+        /// <returns>A collection of characters.</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Character>>> GetCharacter()
+        public async Task<ActionResult<IEnumerable<CharacterReadDTO>>> GetCharacter()
         {
-            return await _context.Characters.ToListAsync();
+            return _mapper.Map<List<CharacterReadDTO>>(await _context.Characters
+                .Include(c => c.Movies)
+                .ToListAsync());
         }
 
         // GET: api/Characters/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Character>> GetCharacter(int id)
+        public async Task<ActionResult<CharacterReadDTO>> GetCharacter(int id)
         {
             var character = await _context.Characters.FindAsync(id);
 
@@ -43,20 +50,22 @@ namespace MovieCharactersAPI.Controllers
                 return NotFound();
             }
 
-            return character;
+            return _mapper.Map<CharacterReadDTO>(character);
         }
 
         // PUT: api/Characters/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCharacter(int id, Character character)
+        public async Task<IActionResult> PutCharacter(int id, CharacterUpdateDTO dtoCharacter)
         {
-            if (id != character.Id)
+            if (id != dtoCharacter.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(character).State = EntityState.Modified;
+            Character domainCharacter = _mapper.Map<Character>(dtoCharacter);
+
+            _context.Entry(domainCharacter).State = EntityState.Modified;
 
             try
             {
@@ -80,12 +89,14 @@ namespace MovieCharactersAPI.Controllers
         // POST: api/Characters
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Character>> PostCharacter(Character character)
+        public async Task<ActionResult<Character>> PostCharacter(CharacterCreateDTO dtoCharacter)
         {
-            _context.Characters.Add(character);
+            Character domainCharacter = _mapper.Map<Character>(dtoCharacter);
+            _context.Characters.Add(domainCharacter);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCharacter", new { id = character.Id }, character);
+            return CreatedAtAction("GetCharacter", new { id = domainCharacter.Id },
+                                   _mapper.Map<CharacterReadDTO>(domainCharacter));
         }
 
         // DELETE: api/Characters/5
