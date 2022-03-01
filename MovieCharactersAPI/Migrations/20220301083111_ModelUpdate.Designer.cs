@@ -2,15 +2,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MovieCharactersAPI.Models;
 
 namespace MovieCharactersAPI.Migrations
 {
     [DbContext(typeof(CharacterDbContext))]
-    partial class CharacterDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220301083111_ModelUpdate")]
+    partial class ModelUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,7 +47,6 @@ namespace MovieCharactersAPI.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Gender")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -54,7 +55,6 @@ namespace MovieCharactersAPI.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -75,7 +75,6 @@ namespace MovieCharactersAPI.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -92,7 +91,6 @@ namespace MovieCharactersAPI.Migrations
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Director")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -100,7 +98,6 @@ namespace MovieCharactersAPI.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Genre")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -109,7 +106,6 @@ namespace MovieCharactersAPI.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Title")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 

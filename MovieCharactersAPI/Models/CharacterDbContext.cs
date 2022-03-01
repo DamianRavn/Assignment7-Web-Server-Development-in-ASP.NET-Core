@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MovieCharactersAPI.Models;
 
 namespace MovieCharactersAPI.Models
 {
@@ -14,5 +15,9 @@ namespace MovieCharactersAPI.Models
         {
             base.OnModelCreating(modelBuilder);
         }
+
+        public DbSet<MovieCharactersAPI.Models.Movie> Movie { get; set; }
+
+        public DbSet<MovieCharactersAPI.Models.Franchise> Franchise { get; set; }
     }
 }
