@@ -24,14 +24,14 @@ namespace MovieCharactersAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Franchise>>> GetFranchise()
         {
-            return await _context.Franchise.ToListAsync();
+            return await _context.Franchises.ToListAsync();
         }
 
         // GET: api/Franchises/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Franchise>> GetFranchise(int id)
         {
-            var franchise = await _context.Franchise.FindAsync(id);
+            var franchise = await _context.Franchises.FindAsync(id);
 
             if (franchise == null)
             {
@@ -77,7 +77,7 @@ namespace MovieCharactersAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Franchise>> PostFranchise(Franchise franchise)
         {
-            _context.Franchise.Add(franchise);
+            _context.Franchises.Add(franchise);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetFranchise", new { id = franchise.Id }, franchise);
@@ -87,13 +87,13 @@ namespace MovieCharactersAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFranchise(int id)
         {
-            var franchise = await _context.Franchise.FindAsync(id);
+            var franchise = await _context.Franchises.FindAsync(id);
             if (franchise == null)
             {
                 return NotFound();
             }
 
-            _context.Franchise.Remove(franchise);
+            _context.Franchises.Remove(franchise);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -101,7 +101,7 @@ namespace MovieCharactersAPI.Controllers
 
         private bool FranchiseExists(int id)
         {
-            return _context.Franchise.Any(e => e.Id == id);
+            return _context.Franchises.Any(e => e.Id == id);
         }
     }
 }

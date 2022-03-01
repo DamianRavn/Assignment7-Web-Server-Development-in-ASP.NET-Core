@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using MovieCharactersAPI.Models;
 
 namespace MovieCharactersAPI.Controllers
@@ -21,17 +22,21 @@ namespace MovieCharactersAPI.Controllers
         }
 
         // GET: api/Characters
+        /// <summary>
+        /// Retrieves all characters in the database.
+        /// </summary>
+        /// <returns>A collection of all characters.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Character>>> GetCharacter()
         {
-            return await _context.Character.ToListAsync();
+            return await _context.Characters.ToListAsync();
         }
 
         // GET: api/Characters/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Character>> GetCharacter(int id)
         {
-            var character = await _context.Character.FindAsync(id);
+            var character = await _context.Characters.FindAsync(id);
 
             if (character == null)
             {
@@ -77,7 +82,7 @@ namespace MovieCharactersAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Character>> PostCharacter(Character character)
         {
-            _context.Character.Add(character);
+            _context.Characters.Add(character);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetCharacter", new { id = character.Id }, character);
@@ -87,13 +92,13 @@ namespace MovieCharactersAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCharacter(int id)
         {
-            var character = await _context.Character.FindAsync(id);
+            var character = await _context.Characters.FindAsync(id);
             if (character == null)
             {
                 return NotFound();
             }
 
-            _context.Character.Remove(character);
+            _context.Characters.Remove(character);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -101,7 +106,7 @@ namespace MovieCharactersAPI.Controllers
 
         private bool CharacterExists(int id)
         {
-            return _context.Character.Any(e => e.Id == id);
+            return _context.Characters.Any(e => e.Id == id);
         }
     }
 }
