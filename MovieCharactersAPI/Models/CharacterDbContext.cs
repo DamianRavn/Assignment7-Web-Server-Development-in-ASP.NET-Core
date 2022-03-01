@@ -22,27 +22,27 @@ namespace MovieCharactersAPI.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Seeding data
-            modelBuilder.Entity<Character>().HasData(new Character() { Id = 1, Name = "Thor", Alias = "Lord of Thunder", Gender = "Male"});
-            modelBuilder.Entity<Character>().HasData(new Character() { Id = 2, Name = "Ironman", Alias = "Tony Stark", Gender = "Male" });
+            modelBuilder.Entity<Character>().HasData(new Character() { Id = 2, Name = "Thor", Alias = "Lord of Thunder", Gender = "Male"});
+            modelBuilder.Entity<Character>().HasData(new Character() { Id = 3, Name = "Ironman", Alias = "Tony Stark", Gender = "Male" });
 
-            modelBuilder.Entity<Character>().HasData(new Movie() { Id = 1, Title = "The Avengers", Genre = "Action", Year = 2012, Director = "Joss Whedon", FranchiseId = 1 });
+            modelBuilder.Entity<Franchise>().HasData(new Franchise() { Id = 1, Name = "MCU", Description = "Marvel's cinematic universe." });
 
-            modelBuilder.Entity<Character>().HasData(new Franchise() { Id = 1, Name = "MCU", Description = "Marvel's cinematic universe." });
+            modelBuilder.Entity<Movie>().HasData(new Movie() { Id = 1, Title = "The Avengers", Genre = "Action", Year = 2012, Director = "Joss Whedon", FranchiseId = 1 });
 
             // Seeding m2m Character-Movie.
             modelBuilder.Entity<Character>()
                 .HasMany(p => p.Movies)
                 .WithMany(m => m.Characters)
                 .UsingEntity<Dictionary<string, object>>(
-                    "CoachCertification",
+                    "CharacterMovie",
                     r => r.HasOne<Movie>().WithMany().HasForeignKey("MovieId"),
                     l => l.HasOne<Character>().WithMany().HasForeignKey("CharacterId"),
                     je =>
                     {
                         je.HasKey("CharacterId", "MovieId");
                         je.HasData(
-                            new { CharacterId = 1, MovieId = 1 },
-                            new { CharacterId = 1, MovieId = 2 }
+                            new { CharacterId = 2, MovieId = 1 },
+                            new { CharacterId = 3, MovieId = 1 }
                         );
                     });
         }
