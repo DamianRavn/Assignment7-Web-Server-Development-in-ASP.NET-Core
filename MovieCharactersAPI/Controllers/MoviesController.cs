@@ -33,7 +33,7 @@ namespace MovieCharactersAPI.Controllers
         public async Task<ActionResult<IEnumerable<MovieReadDTO>>> GetMovie()
         {
             return _mapper.Map<List<MovieReadDTO>>(await _context.Movies
-                .Include(c => c.Characters)
+                .Include(m => m.Characters)
                 .ToListAsync());
         }
 
