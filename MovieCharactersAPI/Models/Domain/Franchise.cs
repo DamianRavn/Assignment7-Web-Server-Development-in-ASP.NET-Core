@@ -10,7 +10,6 @@ namespace MovieCharactersAPI.Models
         public string Name { get; set; }
         [StringLength(200)]
         public string Description { get; set; }
-        [Required]
         public ICollection<Movie> Movies { get; set; }
     }
 }
