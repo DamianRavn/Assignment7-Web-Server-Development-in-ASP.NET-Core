@@ -22,12 +22,17 @@ namespace MovieCharactersAPI.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Seeding data
-            modelBuilder.Entity<Character>().HasData(new Character() { Id = 2, Name = "Thor", Alias = "Lord of Thunder", Gender = "Male"});
-            modelBuilder.Entity<Character>().HasData(new Character() { Id = 3, Name = "Ironman", Alias = "Tony Stark", Gender = "Male" });
+            modelBuilder.Entity<Character>().HasData(new Character() { Id = 1, Name = "Thor", Alias = "Lord of Thunder", Gender = "Male"});
+            modelBuilder.Entity<Character>().HasData(new Character() { Id = 2, Name = "Ironman", Alias = "Tony Stark", Gender = "Male" });
+            modelBuilder.Entity<Character>().HasData(new Character() { Id = 3, Name = "Black Widow", Alias = "Natasha Romanoff", Gender = "Female" });
+            modelBuilder.Entity<Character>().HasData(new Character() { Id = 4, Name = "Spiderman", Alias = "Peter Parker", Gender = "Male" });
+            modelBuilder.Entity<Character>().HasData(new Character() { Id = 5, Name = "Batman", Alias = "Bruce Wayne", Gender = "Male" });
 
             modelBuilder.Entity<Franchise>().HasData(new Franchise() { Id = 1, Name = "MCU", Description = "Marvel's cinematic universe." });
 
             modelBuilder.Entity<Movie>().HasData(new Movie() { Id = 1, Title = "The Avengers", Genre = "Action", Year = 2012, Director = "Joss Whedon", FranchiseId = 1 });
+            modelBuilder.Entity<Movie>().HasData(new Movie() { Id = 2, Title = "Avengers: Endgame", Genre = "Action", Year = 2019, Director = "Anthony Russo, Joe Russo", FranchiseId = 1 });
+            modelBuilder.Entity<Movie>().HasData(new Movie() { Id = 3, Title = "The Dark Knight", Genre = "Action", Year = 2008, Director = "Christopher Nolan" });
 
             // Seeding m2m Character-Movie.
             modelBuilder.Entity<Character>()
@@ -41,8 +46,14 @@ namespace MovieCharactersAPI.Models
                     {
                         je.HasKey("CharacterId", "MovieId");
                         je.HasData(
+                            new { CharacterId = 1, MovieId = 1 },
+                            new { CharacterId = 1, MovieId = 2 },
                             new { CharacterId = 2, MovieId = 1 },
-                            new { CharacterId = 3, MovieId = 1 }
+                            new { CharacterId = 2, MovieId = 2 },
+                            new { CharacterId = 3, MovieId = 1 },
+                            new { CharacterId = 3, MovieId = 2 },
+                            new { CharacterId = 4, MovieId = 2 },
+                            new { CharacterId = 5, MovieId = 3 }
                         );
                     });
         }
