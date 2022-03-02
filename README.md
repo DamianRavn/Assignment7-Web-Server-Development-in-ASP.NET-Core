@@ -4,7 +4,7 @@ This is the third assignment in the backend module of Noroff's full stack develo
 
 Full assignment description can be found [here](https://github.com/DamianRavn/Assignment7-Web-Server-Development-in-ASP.NET-Core/blob/main/Project/Assignment%203_CSharp_Web_API_creation_in_ASP.NET_Core.pdf).
 
-A diagram of the Movie Characters database can be found [here](https://github.com/DamianRavn/Assignment7-Web-Server-Development-in-ASP.NET-Core/blob/main/Project/MovieCharactersDb_diagram).
+A diagram of the Movie Characters database can be found [here](https://github.com/DamianRavn/Assignment7-Web-Server-Development-in-ASP.NET-Core/blob/main/Project/MovieCharactersDb_diagram.png).
 
 ## Description
 
