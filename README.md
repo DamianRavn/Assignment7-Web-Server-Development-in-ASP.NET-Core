@@ -1,6 +1,10 @@
 # Movie Characters API
 
-This is the third assignment in the backend module of Noroff's full stack development course. See assignment description [here](https://github.com/DamianRavn/Assignment7-Web-Server-Development-in-ASP.NET-Core/blob/main/Project/Assignment%203_CSharp_Web_API_creation_in_ASP.NET_Core.pdf).
+This is the third assignment in the backend module of Noroff's full stack development course.
+
+Full assignment description can be found [here](https://github.com/DamianRavn/Assignment7-Web-Server-Development-in-ASP.NET-Core/blob/main/Project/Assignment%203_CSharp_Web_API_creation_in_ASP.NET_Core.pdf).
+
+A diagram of the Movie Characters database can be found [here](https://github.com/DamianRavn/Assignment7-Web-Server-Development-in-ASP.NET-Core/blob/main/Project/MovieCharactersDb_diagram).
 
 ## Description
 
@@ -18,7 +22,8 @@ Use an IDE like Visual Studio.
 
 ### Dependencies
 
-- .Net 5
+- .NET 5
+- ASP.NET
 - SQLServer
 
 ### Install
