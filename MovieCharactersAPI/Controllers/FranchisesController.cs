@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieCharactersAPI.Models;
 using MovieCharactersAPI.Models.DTO.Franchise;
+using MovieCharactersAPI.Models.DTO.Movie;
 
 namespace MovieCharactersAPI.Controllers
 {
@@ -62,8 +63,36 @@ namespace MovieCharactersAPI.Controllers
                 //franchise was not found
                 return NotFound();
             }
+
+
+
             //Map franchise to read dto
             return _mapper.Map<FranchiseReadDTO>(franchise);
+        }
+
+        /// <summary>
+        /// Fetches all movies in a given franchise.
+        /// </summary>
+        /// <param name="id">Id of the franchise.</param>
+        /// <returns>The movies of the franchise matching the id.</returns>
+        [HttpGet("{id}/movies")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<List<MovieReadDTO>>> GetMoviesInFranchise(int id)
+        {
+            //Find the franchise in the context
+            var franchise = await _context.Franchises.FindAsync(id);
+
+            if (franchise == null)
+            {
+                //franchise was not found
+                return NotFound();
+            }
+
+            var movies = await _context.Movies.Where(m => m.FranchiseId == id).ToListAsync();
+
+            //Map franchise to read dto
+            return _mapper.Map<List<MovieReadDTO>>(movies);
         }
 
         // PUT: api/Franchises/5
