@@ -29,10 +29,13 @@ namespace MovieCharactersAPI.Models
             modelBuilder.Entity<Character>().HasData(new Character() { Id = 5, Name = "Batman", Alias = "Bruce Wayne", Gender = "Male" });
 
             modelBuilder.Entity<Franchise>().HasData(new Franchise() { Id = 1, Name = "MCU", Description = "Marvel's cinematic universe." });
+            modelBuilder.Entity<Franchise>().HasData(new Franchise() { Id = 2, Name = "DNT", Description = "Dark Knight Trilogy" });
+            modelBuilder.Entity<Franchise>().HasData(new Franchise() { Id = 3, Name = "TCU", Description = "Titanic's cinematic universe." });
 
             modelBuilder.Entity<Movie>().HasData(new Movie() { Id = 1, Title = "The Avengers", Genre = "Action", Year = 2012, Director = "Joss Whedon", FranchiseId = 1 });
             modelBuilder.Entity<Movie>().HasData(new Movie() { Id = 2, Title = "Avengers: Endgame", Genre = "Action", Year = 2019, Director = "Anthony Russo, Joe Russo", FranchiseId = 1 });
             modelBuilder.Entity<Movie>().HasData(new Movie() { Id = 3, Title = "The Dark Knight", Genre = "Action", Year = 2008, Director = "Christopher Nolan" });
+            modelBuilder.Entity<Movie>().HasData(new Movie() { Id = 4, Title = "Titanic", Genre = "Action", Year = 1997, Director = "James Camera" });
 
             // Seeding m2m Character-Movie.
             modelBuilder.Entity<Character>()
