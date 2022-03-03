@@ -11,6 +11,9 @@ using MovieCharactersAPI.Models.DTO.Movie;
 
 namespace MovieCharactersAPI.Controllers
 {
+    /// <summary>
+    /// The controller holds all the API endpoints
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class MoviesController : ControllerBase
@@ -18,6 +21,11 @@ namespace MovieCharactersAPI.Controllers
         private readonly CharacterDbContext _context;
         private readonly IMapper _mapper;
 
+        /// <summary>
+        /// Adding context and mapper with dependency injection.
+        /// </summary>
+        /// <param name="context">The proper context</param>
+        /// <param name="mapper">The automapper</param>
         public MoviesController(CharacterDbContext context, IMapper mapper)
         {
             _context = context;
@@ -26,10 +34,11 @@ namespace MovieCharactersAPI.Controllers
 
         // GET: api/Movies
         /// <summary>
-        /// Get all movies
+        /// Fetches all movies in the Movies table
         /// </summary>
-        /// <returns>A collection of movies, characters included</returns>
+        /// <returns>A collection of movies, characters id's included</returns>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<MovieReadDTO>>> GetMovie()
         {
             return _mapper.Map<List<MovieReadDTO>>(await _context.Movies
@@ -39,11 +48,13 @@ namespace MovieCharactersAPI.Controllers
 
         // GET: api/Movies/5
         /// <summary>
-        /// Get single movie
+        /// Fetches a single movie from the Movies table
         /// </summary>
         /// <param name="id">id of movie</param>
         /// <returns>the movie matching the id</returns>
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<MovieReadDTO>> GetMovie(int id)
         {
             var movie = await _context.Movies.FindAsync(id);
@@ -65,6 +76,10 @@ namespace MovieCharactersAPI.Controllers
         /// <param name="dtoMovie">the updated movie</param>
         /// <returns>NoContent status code if successful. Else BadRequest or NotFound.</returns>
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> PutMovie(int id, MovieUpdateDTO dtoMovie)
         {
             if (id != dtoMovie.Id)
@@ -103,6 +118,9 @@ namespace MovieCharactersAPI.Controllers
         /// <param name="dtoMovie">the movie to create</param>
         /// <returns>status code Created if successful</returns>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<Movie>> PostMovie(MovieCreateDTO dtoMovie)
         {
             Movie domainMovie = _mapper.Map<Movie>(dtoMovie);
@@ -119,6 +137,8 @@ namespace MovieCharactersAPI.Controllers
         /// <param name="id">id of movie to delete</param>
         /// <returns>status code NoContent if successful</returns>
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteMovie(int id)
         {
             var movie = await _context.Movies.FindAsync(id);
@@ -131,6 +151,55 @@ namespace MovieCharactersAPI.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Updates the characters in a movie
+        /// </summary>
+        /// <param name="id">of the movie</param>
+        /// <param name="characters">an array of character id's</param>
+        [HttpPut("{id}/characters")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateCharacterInMovie(int id, int[] characters)
+        {
+            if (!MovieExists(id))
+            {
+                return NotFound();
+            }
+
+
+            Movie movieToUdate = await _context.Movies
+                .Include(c => c.Characters)
+                .Where(c => c.Id == id)
+                .FirstAsync();
+
+            // Loop through characters, try and assign to movie
+            var charaList = new List<Character>();
+            foreach (int charaId in characters)
+            {
+                Character chara = await _context.Characters.FindAsync(charaId);
+                if (chara == null)
+                    // Record doesnt exist
+                    return BadRequest("Character doesnt exist!");
+
+                charaList.Add(chara);
+            }
+            movieToUdate.Characters = charaList;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw;
+            }
+
+            return NoContent();
+
         }
 
         private bool MovieExists(int id)
