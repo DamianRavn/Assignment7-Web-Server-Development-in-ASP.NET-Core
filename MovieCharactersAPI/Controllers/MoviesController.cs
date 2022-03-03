@@ -12,7 +12,7 @@ using MovieCharactersAPI.Models.DTO.Movie;
 namespace MovieCharactersAPI.Controllers
 {
     /// <summary>
-    /// The controller holds all the API endpoints
+    /// The controller holds all the API endpoints for the Movies table
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
@@ -57,20 +57,22 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<MovieReadDTO>> GetMovie(int id)
         {
+            //Find the movie in the context
             var movie = await _context.Movies.FindAsync(id);
 
             if (movie == null)
             {
+                //movie was not found
                 return NotFound();
             }
-
+            //Map movie to read dto
             return _mapper.Map<MovieReadDTO>(movie);
         }
 
         // PUT: api/Movies/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         /// <summary>
-        /// Update the movie
+        /// Update the movie in the Movies table
         /// </summary>
         /// <param name="id">id of movie</param>
         /// <param name="dtoMovie">the updated movie</param>
@@ -86,34 +88,37 @@ namespace MovieCharactersAPI.Controllers
             {
                 return BadRequest();
             }
-
+            //Map the update dto to a movie object
             Movie domainMovie = _mapper.Map<Movie>(dtoMovie);
-
+            //Change the state of the movie to modified
             _context.Entry(domainMovie).State = EntityState.Modified;
 
+            //Try to save the context (update the sql server)
             try
             {
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
+                //Check if movie exists
                 if (!MovieExists(id))
                 {
                     return NotFound();
                 }
                 else
                 {
+                    //We don't know what the problem is, just stop the program
                     throw;
                 }
             }
-
+            //NoContent is returned if nothing went wrong
             return NoContent();
         }
 
         // POST: api/Movies
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         /// <summary>
-        /// Create a movie
+        /// Create a movie in Movies table
         /// </summary>
         /// <param name="dtoMovie">the movie to create</param>
         /// <returns>status code Created if successful</returns>
@@ -123,16 +128,20 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<Movie>> PostMovie(MovieCreateDTO dtoMovie)
         {
+            //Map the create dto to movie
             Movie domainMovie = _mapper.Map<Movie>(dtoMovie);
+            //add to context
             _context.Movies.Add(domainMovie);
+            //Framework takes care of the rest when saved
             await _context.SaveChangesAsync();
 
+            //Return the movie that has been created
             return CreatedAtAction("GetMovie", new { id = domainMovie.Id }, _mapper.Map<MovieReadDTO>(domainMovie));
         }
 
         // DELETE: api/Movies/5
         /// <summary>
-        /// Deletes a movie
+        /// Deletes a movie from the Movies table
         /// </summary>
         /// <param name="id">id of movie to delete</param>
         /// <returns>status code NoContent if successful</returns>
@@ -146,7 +155,7 @@ namespace MovieCharactersAPI.Controllers
             {
                 return NotFound();
             }
-
+            //Remove movie from context. The framework takes care of the rest when context is saved
             _context.Movies.Remove(movie);
             await _context.SaveChangesAsync();
 
@@ -154,7 +163,7 @@ namespace MovieCharactersAPI.Controllers
         }
 
         /// <summary>
-        /// Updates the characters in a movie
+        /// Adds characters to a movie, and the movie to the characters
         /// </summary>
         /// <param name="id">of the movie</param>
         /// <param name="characters">an array of character id's</param>
@@ -170,7 +179,7 @@ namespace MovieCharactersAPI.Controllers
                 return NotFound();
             }
 
-
+            //Find the correct movie, with characters included
             Movie movieToUdate = await _context.Movies
                 .Include(c => c.Characters)
                 .Where(c => c.Id == id)
@@ -202,6 +211,11 @@ namespace MovieCharactersAPI.Controllers
 
         }
 
+        /// <summary>
+        /// Helperfunction to check if movie exists using the context
+        /// </summary>
+        /// <param name="id">id of movie</param>
+        /// <returns>true if exists</returns>
         private bool MovieExists(int id)
         {
             return _context.Movies.Any(e => e.Id == id);
