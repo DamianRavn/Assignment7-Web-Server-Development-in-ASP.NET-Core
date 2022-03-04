@@ -66,16 +66,13 @@ namespace MovieCharactersAPI.Services
         public async Task<List<Movie>> GetMovieFranchiseAsync(int id)
         {
             // Find the franchise in the context
-            var franchise = await _context.Franchises.FindAsync(id);
+            var movies = await _context.Movies
+                .Include(m => m.Characters)
+                .Where(m => m.FranchiseId == id)
+                .ToListAsync();
 
-            if (franchise == null)
-            {
-                // franchise was not found
-                throw new KeyNotFoundException();
-            }
 
-            
-            return await _context.Movies.Where(m => m.FranchiseId == id).ToListAsync();
+            return movies;
         }
 
         /// <summary>
@@ -85,7 +82,13 @@ namespace MovieCharactersAPI.Services
         /// <returns>the franchise matching the id as a valuetask</returns>
         public async Task<Franchise> GetSpecificFranchiseAsync(int id)
         {
-            return await _context.Franchises.FindAsync(id);
+            //Find the franchise in the context and include its movies.
+            var franchise = await _context.Franchises
+                .Include(f => f.Movies)
+                .Where(f => f.Id == id)
+                .ToListAsync();
+
+            return franchise.First();
         }
 
         /// <summary>
@@ -149,12 +152,13 @@ namespace MovieCharactersAPI.Services
                 .Select(m => m.Id)
                 .ToListAsync();
 
-            var characters = new List<Character>();
+            List<Character> characters = new List<Character>();
 
             // Loop over the movie ids and get the characters in each movie.
             foreach (var movieId in movieIds)
             {
                 characters.AddRange(await _context.Characters
+                    .Include(c => c.Movies)
                     .Where(c => c.Movies
                     .Any(m => m.Id == movieId))
                     .ToListAsync());
