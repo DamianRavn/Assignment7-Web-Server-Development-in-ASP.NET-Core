@@ -65,7 +65,7 @@ namespace MovieCharactersAPI.Controllers
                 return NotFound();
             }
             //Map movie to read dto
-            return _mapper.Map<MovieReadDTO>(movie.First());
+            return _mapper.Map<MovieReadDTO>(movie);
         }
 
         /// <summary>

@@ -72,7 +72,11 @@ namespace MovieCharactersAPI.Services
                 throw new KeyNotFoundException();
             }
 
-            return await _context.Characters.Where(c => c.Movies.Any(m => m.Id == id)).ToListAsync();
+            return await _context.Characters
+                .Include(c => c.Movies)
+                .Where(c => c.Movies
+                .Any(m => m.Id == id))
+                .ToListAsync();
         }
 
         /// <summary>
@@ -82,7 +86,13 @@ namespace MovieCharactersAPI.Services
         /// <returns>the movie matching the id as a valuetask</returns>
         public async Task<Movie> GetSpecificMovieAsync(int id)
         {
-            return await _context.Movies.FindAsync(id);
+            // Find the movie in the context and include characters.
+            var movie = await _context.Movies
+                .Include(m => m.Characters)
+                .Where(m => m.Id == id)
+                .ToListAsync();
+
+            return movie.First();
         }
 
         /// <summary>
