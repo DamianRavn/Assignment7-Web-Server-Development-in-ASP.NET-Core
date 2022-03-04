@@ -242,7 +242,7 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateCharacterInMovie(int id, int[] movies)
+        public async Task<IActionResult> UpdateMoviesInFranchise(int id, int[] movies)
         {
             if (!FranchiseExists(id))
             {
