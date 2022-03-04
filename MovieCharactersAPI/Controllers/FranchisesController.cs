@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieCharactersAPI.Models;
+using MovieCharactersAPI.Models.DTO.Character;
 using MovieCharactersAPI.Models.DTO.Franchise;
 using MovieCharactersAPI.Models.DTO.Movie;
 
@@ -80,19 +81,61 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<List<MovieReadDTO>>> GetMoviesInFranchise(int id)
         {
-            //Find the franchise in the context
+            // Find the franchise in the context
             var franchise = await _context.Franchises.FindAsync(id);
 
             if (franchise == null)
             {
-                //franchise was not found
+                // franchise was not found
                 return NotFound();
             }
 
             var movies = await _context.Movies.Where(m => m.FranchiseId == id).ToListAsync();
 
-            //Map franchise to read dto
+            // Map movies to read dto
             return _mapper.Map<List<MovieReadDTO>>(movies);
+        }
+
+        /// <summary>
+        /// Fetches all characters in a given franchise.
+        /// </summary>
+        /// <param name="id">Id of the franchise.</param>
+        /// <returns>The characters of the franchise matching the id.</returns>
+        [HttpGet("{id}/characters")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<List<CharacterReadDTO>>> GetCharactersInFranchise(int id)
+        {
+            // Find the franchise in the context
+            var franchise = await _context.Franchises.FindAsync(id);
+
+            if (franchise == null)
+            {
+                // Franchise was not found
+                return NotFound();
+            }
+
+            // Get the ids of all the movies in the franchise.
+            var movieIds = await _context.Movies
+                .Where(m => m.FranchiseId == id)
+                .Select(m => m.Id)
+                .ToListAsync();
+            List<Character> characters = new List<Character>();
+
+            // Loop over the movie ids and get the characters in each movie.
+            foreach(var movieId in movieIds)
+            {
+                characters.AddRange(await _context.Characters
+                    .Where(c => c.Movies
+                    .Any(m => m.Id == movieId))
+                    .ToListAsync());
+            }
+
+            // Remove duplicate characters.
+            characters = characters.Distinct().ToList();
+
+            // Map characters to read dto.
+            return _mapper.Map<List<CharacterReadDTO>>(characters);
         }
 
         // PUT: api/Franchises/5
