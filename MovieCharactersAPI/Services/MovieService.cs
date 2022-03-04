@@ -66,12 +66,6 @@ namespace MovieCharactersAPI.Services
             // Find the movie in the context
             var movie = await _context.Movies.FindAsync(id);
 
-            if (movie == null)
-            {
-                // Movie was not found
-                throw new KeyNotFoundException();
-            }
-
             return await _context.Characters
                 .Include(c => c.Movies)
                 .Where(c => c.Movies

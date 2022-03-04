@@ -56,15 +56,16 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<CharacterReadDTO>> GetCharacter(int id)
         {
+            if (!CharacterExists(id))
+            {
+                // Franchise was not found.
+                return NotFound();
+            }
+
             var character = await _context.Characters
                 .Include(c => c.Movies)
                 .Where(c => c.Id == id)
                 .ToListAsync();
-
-            if (character == null)
-            {
-                return NotFound();
-            }
 
             return _mapper.Map<CharacterReadDTO>(character.First());
         }
@@ -139,11 +140,13 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteCharacter(int id)
         {
-            var character = await _context.Characters.FindAsync(id);
-            if (character == null)
+            if (!CharacterExists(id))
             {
+                // Franchise was not found.
                 return NotFound();
             }
+
+            var character = await _context.Characters.FindAsync(id);
 
             _context.Characters.Remove(character);
             await _context.SaveChangesAsync();

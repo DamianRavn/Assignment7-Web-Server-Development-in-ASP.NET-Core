@@ -57,17 +57,17 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<FranchiseReadDTO>> GetFranchise(int id)
         {
+            if (!FranchiseExists(id))
+            {
+                // Franchise was not found.
+                return NotFound();
+            }
+
             //Find the franchise in the context and include its movies.
             var franchise = await _context.Franchises
                 .Include(f => f.Movies)
                 .Where(f => f.Id == id)
                 .ToListAsync();
-
-            if (franchise == null)
-            {
-                // Franchise was not found.
-                return NotFound();
-            }
             
             // Map franchise to read dto.
             return _mapper.Map<FranchiseReadDTO>(franchise.First());
@@ -83,14 +83,14 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<List<MovieReadDTO>>> GetMoviesInFranchise(int id)
         {
-            // Find the franchise in the context
-            var franchise = await _context.Franchises.FindAsync(id);
-
-            if (franchise == null)
+            if (!FranchiseExists(id))
             {
-                // franchise was not found
+                // Franchise was not found.
                 return NotFound();
             }
+
+            // Find the franchise in the context
+            var franchise = await _context.Franchises.FindAsync(id);
 
             var movies = await _context.Movies
                 .Include(m => m.Characters)
@@ -111,14 +111,14 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<List<CharacterReadDTO>>> GetCharactersInFranchise(int id)
         {
-            // Find the franchise in the context
-            var franchise = await _context.Franchises.FindAsync(id);
-
-            if (franchise == null)
+            if (!FranchiseExists(id))
             {
-                // Franchise was not found
+                // Franchise was not found.
                 return NotFound();
             }
+
+            // Find the franchise in the context
+            var franchise = await _context.Franchises.FindAsync(id);
 
             // Get the ids of all the movies in the franchise.
             var movieIds = await _context.Movies
@@ -220,11 +220,14 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteFranchise(int id)
         {
-            var franchise = await _context.Franchises.FindAsync(id);
-            if (franchise == null)
+            if (!FranchiseExists(id))
             {
+                // Franchise was not found.
                 return NotFound();
             }
+
+            var franchise = await _context.Franchises.FindAsync(id);
+
             //Remove franchise from context. The framework takes care of the rest when context is saved
             _context.Franchises.Remove(franchise);
             await _context.SaveChangesAsync();

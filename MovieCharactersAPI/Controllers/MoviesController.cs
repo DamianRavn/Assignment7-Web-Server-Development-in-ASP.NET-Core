@@ -56,15 +56,15 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<MovieReadDTO>> GetMovie(int id)
         {
-            //Find the movie in the context
-            var movie = await _movieService.GetSpecificMovieAsync(id);
-
-            if (movie == null)
+            if (!_movieService.MovieExists(id))
             {
-                //movie was not found
                 return NotFound();
             }
-            //Map movie to read dto
+
+            // Find the movie in the context
+            var movie = await _movieService.GetSpecificMovieAsync(id);
+
+            // Map movie to read dto
             return _mapper.Map<MovieReadDTO>(movie);
         }
 
@@ -78,9 +78,13 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<List<CharacterReadDTO>>> GetCharactersInMovie(int id)
         {
-            //find the characters
+            if (!_movieService.MovieExists(id))
+            {
+                return NotFound();
+            }
+            // Find the characters
             var characters = _movieService.GetCharactersMovieAsync(id).Result;
-            //Map franchise to read dto
+            // Map franchise to read dto
             return _mapper.Map<List<CharacterReadDTO>>(characters);
         }
 
@@ -97,22 +101,22 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> PutMovie(int id, MovieUpdateDTO dtoMovie)
         {
-            //Check if dtoMovie and id correspond
+            // Check if dtoMovie and id correspond
             if (id != dtoMovie.Id)
             {
                 return BadRequest();
             }
-            //Check if id corresponds to a movie
+            // Check if id corresponds to a movie
             if (!_movieService.MovieExists(id))
             {
                 return NotFound();
             }
 
-            //Map the update dto to a movie object
+            // Map the update dto to a movie object
             Movie domainMovie = _mapper.Map<Movie>(dtoMovie);
             await _movieService.UpdateMovieAsync(domainMovie);
 
-            //NoContent is returned if nothing went wrong
+            // NoContent is returned if nothing went wrong
             return NoContent();
         }
 
@@ -146,7 +150,7 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteMovie(int id)
         {
-            //Check if id corresponds to a movie
+            // Check if id corresponds to a movie
             if (!_movieService.MovieExists(id))
             {
                 return NotFound();
