@@ -57,19 +57,20 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<FranchiseReadDTO>> GetFranchise(int id)
         {
-            //Find the franchise in the context
-            var franchise = await _context.Franchises.FindAsync(id);
+            //Find the franchise in the context and include its movies.
+            var franchise = await _context.Franchises
+                .Include(f => f.Movies)
+                .Where(f => f.Id == id)
+                .ToListAsync();
 
             if (franchise == null)
             {
-                //franchise was not found
+                // Franchise was not found.
                 return NotFound();
             }
-
-
-
-            //Map franchise to read dto
-            return _mapper.Map<FranchiseReadDTO>(franchise);
+            
+            // Map franchise to read dto.
+            return _mapper.Map<FranchiseReadDTO>(franchise.First());
         }
 
         /// <summary>
@@ -91,7 +92,10 @@ namespace MovieCharactersAPI.Controllers
                 return NotFound();
             }
 
-            var movies = await _context.Movies.Where(m => m.FranchiseId == id).ToListAsync();
+            var movies = await _context.Movies
+                .Include(m => m.Characters)
+                .Where(m => m.FranchiseId == id)
+                .ToListAsync();
 
             // Map movies to read dto
             return _mapper.Map<List<MovieReadDTO>>(movies);
@@ -127,6 +131,7 @@ namespace MovieCharactersAPI.Controllers
             foreach(var movieId in movieIds)
             {
                 characters.AddRange(await _context.Characters
+                    .Include(c => c.Movies)
                     .Where(c => c.Movies
                     .Any(m => m.Id == movieId))
                     .ToListAsync());
@@ -139,7 +144,6 @@ namespace MovieCharactersAPI.Controllers
             return _mapper.Map<List<CharacterReadDTO>>(characters);
         }
 
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         /// <summary>
         /// Update the franchise in the Franchises table
         /// </summary>

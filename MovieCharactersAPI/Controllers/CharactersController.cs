@@ -56,14 +56,17 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<CharacterReadDTO>> GetCharacter(int id)
         {
-            var character = await _context.Characters.FindAsync(id);
+            var character = await _context.Characters
+                .Include(c => c.Movies)
+                .Where(c => c.Id == id)
+                .ToListAsync();
 
             if (character == null)
             {
                 return NotFound();
             }
 
-            return _mapper.Map<CharacterReadDTO>(character);
+            return _mapper.Map<CharacterReadDTO>(character.First());
         }
 
         /// <summary>
