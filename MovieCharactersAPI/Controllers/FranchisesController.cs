@@ -58,16 +58,14 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<FranchiseReadDTO>> GetFranchise(int id)
         {
-            //Find the movie in the context
-            var movie = await _franchiseService.GetSpecificFranchiseAsync(id);
-
-            if (movie == null)
+            if (!_franchiseService.FranchiseExists(id))
             {
-                //movie was not found
                 return NotFound();
             }
+            //Find the movie in the context
+            var franchise = await _franchiseService.GetSpecificFranchiseAsync(id);
             //Map movie to read dto
-            return _mapper.Map<FranchiseReadDTO>(movie);
+            return _mapper.Map<FranchiseReadDTO>(franchise);
         }
 
         /// <summary>
@@ -78,8 +76,12 @@ namespace MovieCharactersAPI.Controllers
         [HttpGet("{id}/movies")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<List<MovieReadDTO>> GetMoviesInFranchise(int id)
+        public async Task<ActionResult<List<MovieReadDTO>>> GetMoviesInFranchise(int id)
         {
+            if (!_franchiseService.FranchiseExists(id))
+            {
+                return NotFound();
+            }
             //find the characters
             var movies = _franchiseService.GetMovieFranchiseAsync(id).Result;
             // Map movies to read dto
@@ -96,6 +98,10 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<List<CharacterReadDTO>>> GetCharactersInFranchise(int id)
         {
+            if (!_franchiseService.FranchiseExists(id))
+            {
+                return NotFound();
+            }
             var characters = _franchiseService.GetCharactersFranchiseAsync(id).Result;
 
             // Map characters to read dto.

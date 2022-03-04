@@ -14,12 +14,13 @@ namespace MovieCharactersAPI.Profiles
         public MovieProfile()
         {
             CreateMap<Movie, MovieReadDTO>()
-                // Turning related characters into arrays
+                // Turning related characters into an array of ints
                 .ForMember(cdto => cdto.Characters, opt => opt
                 .MapFrom(c => c.Characters.Select(c => c.Id).ToArray()))
                 // Franchise in dto is FranchiseId
                 .ForMember(cdto => cdto.Franchise, opt => opt
                 .MapFrom(a => a.FranchiseId))
+                //Two-way mapping
                 .ReverseMap();
 
             CreateMap<MovieCreateDTO, Movie>()

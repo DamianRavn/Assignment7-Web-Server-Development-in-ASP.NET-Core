@@ -14,7 +14,7 @@ namespace MovieCharactersAPI.Profiles
         public CharacterProfile()
         {
             CreateMap<Character, CharacterReadDTO>()
-                // Turning related movies into arrays
+                // Turning related movies into an array of ints
                 .ForMember(cdto => cdto.Movies, opt => opt
                 .MapFrom(c => c.Movies.Select(c => c.Id).ToArray()));
             CreateMap<CharacterCreateDTO, Character>();

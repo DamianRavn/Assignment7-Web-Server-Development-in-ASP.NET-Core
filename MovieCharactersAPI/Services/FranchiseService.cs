@@ -141,6 +141,11 @@ namespace MovieCharactersAPI.Services
             await _context.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Fetches all characters in a given franchise.
+        /// </summary>
+        /// <param name="id">Id of the franchise.</param>
+        /// <returns>The characters of the franchise matching the id.</returns>
         public async Task<List<Character>> GetCharactersFranchiseAsync(int id)
         {
             // Find the franchise in the context
