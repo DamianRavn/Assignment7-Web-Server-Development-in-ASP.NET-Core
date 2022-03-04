@@ -102,7 +102,6 @@ namespace MovieCharactersAPI.Controllers
             return _mapper.Map<List<CharacterReadDTO>>(characters);
         }
 
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         /// <summary>
         /// Update the franchise in the Franchises table
         /// </summary>
@@ -168,6 +167,7 @@ namespace MovieCharactersAPI.Controllers
             //Check if id corresponds to a movie
             if (!_franchiseService.FranchiseExists(id))
             {
+                // Franchise was not found.
                 return NotFound();
             }
 

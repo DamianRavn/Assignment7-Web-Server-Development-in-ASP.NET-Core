@@ -46,26 +46,25 @@ namespace MovieCharactersAPI.Controllers
             return _mapper.Map<List<MovieReadDTO>>(await _movieService.GetAllMoviesAsync());
         }
 
-        // GET: api/Movies/5
         /// <summary>
-        /// Fetches a single movie from the Movies table
+        /// Fetches a single movie from the Movies table.
         /// </summary>
-        /// <param name="id">id of movie</param>
-        /// <returns>the movie matching the id</returns>
+        /// <param name="id">Id of movie.</param>
+        /// <returns>The movie matching the id.</returns>
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<MovieReadDTO>> GetMovie(int id)
         {
-            //Find the movie in the context
-            var movie = await _movieService.GetSpecificMovieAsync(id);
-
-            if (movie == null)
+            if (!_movieService.MovieExists(id))
             {
-                //movie was not found
                 return NotFound();
             }
-            //Map movie to read dto
+
+            // Find the movie in the context
+            var movie = await _movieService.GetSpecificMovieAsync(id);
+
+            // Map movie to read dto
             return _mapper.Map<MovieReadDTO>(movie);
         }
 
@@ -79,18 +78,20 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<List<CharacterReadDTO>>> GetCharactersInMovie(int id)
         {
-            //find the characters
+            if (!_movieService.MovieExists(id))
+            {
+                return NotFound();
+            }
+            // Find the characters
             var characters = _movieService.GetCharactersMovieAsync(id).Result;
-            //Map franchise to read dto
+            // Map franchise to read dto
             return _mapper.Map<List<CharacterReadDTO>>(characters);
         }
 
-        // PUT: api/Movies/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         /// <summary>
-        /// Update the movie in the Movies table
+        /// Update the movie in the Movies table.
         /// </summary>
-        /// <param name="id">id of movie</param>
+        /// <param name="id">Id of movie.</param>
         /// <param name="dtoMovie">the updated movie</param>
         /// <returns>NoContent status code if successful. Else BadRequest or NotFound.</returns>
         [HttpPut("{id}")]
@@ -100,32 +101,30 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> PutMovie(int id, MovieUpdateDTO dtoMovie)
         {
-            //Check if dtoMovie and id correspond
+            // Check if dtoMovie and id correspond
             if (id != dtoMovie.Id)
             {
                 return BadRequest();
             }
-            //Check if id corresponds to a movie
+            // Check if id corresponds to a movie
             if (!_movieService.MovieExists(id))
             {
                 return NotFound();
             }
 
-            //Map the update dto to a movie object
+            // Map the update dto to a movie object
             Movie domainMovie = _mapper.Map<Movie>(dtoMovie);
             await _movieService.UpdateMovieAsync(domainMovie);
 
-            //NoContent is returned if nothing went wrong
+            // NoContent is returned if nothing went wrong
             return NoContent();
         }
 
-        // POST: api/Movies
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         /// <summary>
-        /// Create a movie in Movies table
+        /// Create a movie in Movies table.
         /// </summary>
-        /// <param name="dtoMovie">the movie to create</param>
-        /// <returns>status code Created if successful</returns>
+        /// <param name="dtoMovie">The movie to create.</param>
+        /// <returns>Status code Created if successful.</returns>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -151,7 +150,7 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteMovie(int id)
         {
-            //Check if id corresponds to a movie
+            // Check if id corresponds to a movie
             if (!_movieService.MovieExists(id))
             {
                 return NotFound();
@@ -163,10 +162,10 @@ namespace MovieCharactersAPI.Controllers
         }
 
         /// <summary>
-        /// Adds characters to a movie, and the movie to the characters
+        /// Adds characters to a movie, and the movie to the characters.
         /// </summary>
-        /// <param name="id">of the movie</param>
-        /// <param name="characters">an array of character id's</param>
+        /// <param name="id">If of the movie.</param>
+        /// <param name="characters">An array of character ids.</param>
         [HttpPut("{id}/characters")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
