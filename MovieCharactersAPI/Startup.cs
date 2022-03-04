@@ -37,6 +37,7 @@ namespace MovieCharactersAPI
             services.AddAutoMapper(typeof(Startup));
             // Add our Services - can also be called repository.
             services.AddScoped(typeof(IMovieService), typeof(MovieService));
+            services.AddScoped(typeof(IFranchiseService), typeof(FranchiseService));
 
             services.AddSwaggerGen(c =>
             {
