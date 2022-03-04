@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -9,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using MovieCharactersAPI.Models;
 using MovieCharactersAPI.Models.DTO.Character;
 using MovieCharactersAPI.Models.DTO.Movie;
+using MovieCharactersAPI.Services;
 
 namespace MovieCharactersAPI.Controllers
 {
@@ -19,17 +19,19 @@ namespace MovieCharactersAPI.Controllers
     [ApiController]
     public class MoviesController : ControllerBase
     {
-        private readonly CharacterDbContext _context;
+        // Add automapper via DI
         private readonly IMapper _mapper;
+        // We no longer are dependent on the entire context, and it cleans up the controller code
+        private readonly IMovieService _movieService;
 
         /// <summary>
-        /// Adding context and mapper with dependency injection.
+        /// Adding service and mapper with dependency injection.
         /// </summary>
-        /// <param name="context">The proper context</param>
+        /// <param name="movieService">a helper object to deal with async calls</param>
         /// <param name="mapper">The automapper</param>
-        public MoviesController(CharacterDbContext context, IMapper mapper)
+        public MoviesController(IMapper mapper, IMovieService movieService)
         {
-            _context = context;
+            _movieService = movieService;
             _mapper = mapper;
         }
 
@@ -39,11 +41,9 @@ namespace MovieCharactersAPI.Controllers
         /// <returns>A collection of movies, characters id's included.</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<MovieReadDTO>>> GetMovie()
+        public async Task<ActionResult<IEnumerable<MovieReadDTO>>> GetMovies()
         {
-            return _mapper.Map<List<MovieReadDTO>>(await _context.Movies
-                .Include(m => m.Characters)
-                .ToListAsync());
+            return _mapper.Map<List<MovieReadDTO>>(await _movieService.GetAllMoviesAsync());
         }
 
         // GET: api/Movies/5
@@ -58,7 +58,7 @@ namespace MovieCharactersAPI.Controllers
         public async Task<ActionResult<MovieReadDTO>> GetMovie(int id)
         {
             //Find the movie in the context
-            var movie = await _context.Movies.FindAsync(id);
+            var movie = await _movieService.GetSpecificMovieAsync(id);
 
             if (movie == null)
             {
@@ -77,19 +77,10 @@ namespace MovieCharactersAPI.Controllers
         [HttpGet("{id}/characters")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<List<CharacterReadDTO>>> GetMoviesInFranchise(int id)
+        public async Task<ActionResult<List<CharacterReadDTO>>> GetCharactersInMovie(int id)
         {
-            // Find the movie in the context
-            var movie = await _context.Movies.FindAsync(id);
-
-            if (movie == null)
-            {
-                // Movie was not found
-                return NotFound();
-            }
-
-            var characters = await _context.Characters.Where(c => c.Movies.Any(m => m.Id == id)).ToListAsync();
-
+            //find the characters
+            var characters = _movieService.GetCharactersMovieAsync(id).Result;
             //Map franchise to read dto
             return _mapper.Map<List<CharacterReadDTO>>(characters);
         }
@@ -109,33 +100,21 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> PutMovie(int id, MovieUpdateDTO dtoMovie)
         {
+            //Check if dtoMovie and id correspond
             if (id != dtoMovie.Id)
             {
                 return BadRequest();
             }
+            //Check if id corresponds to a movie
+            if (!_movieService.MovieExists(id))
+            {
+                return NotFound();
+            }
+
             //Map the update dto to a movie object
             Movie domainMovie = _mapper.Map<Movie>(dtoMovie);
-            //Change the state of the movie to modified
-            _context.Entry(domainMovie).State = EntityState.Modified;
+            await _movieService.UpdateMovieAsync(domainMovie);
 
-            //Try to save the context (update the sql server)
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                //Check if movie exists
-                if (!MovieExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    //We don't know what the problem is, just stop the program
-                    throw;
-                }
-            }
             //NoContent is returned if nothing went wrong
             return NoContent();
         }
@@ -155,10 +134,8 @@ namespace MovieCharactersAPI.Controllers
         {
             //Map the create dto to movie
             Movie domainMovie = _mapper.Map<Movie>(dtoMovie);
-            //add to context
-            _context.Movies.Add(domainMovie);
-            //Framework takes care of the rest when saved
-            await _context.SaveChangesAsync();
+
+            domainMovie = await _movieService.AddMovieAsync(domainMovie);
 
             //Return the movie that has been created
             return CreatedAtAction("GetMovie", new { id = domainMovie.Id }, _mapper.Map<MovieReadDTO>(domainMovie));
@@ -174,14 +151,13 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteMovie(int id)
         {
-            var movie = await _context.Movies.FindAsync(id);
-            if (movie == null)
+            //Check if id corresponds to a movie
+            if (!_movieService.MovieExists(id))
             {
                 return NotFound();
             }
-            //Remove movie from context. The framework takes care of the rest when context is saved
-            _context.Movies.Remove(movie);
-            await _context.SaveChangesAsync();
+
+            await _movieService.DeleteMovieAsync(id);
 
             return NoContent();
         }
@@ -198,51 +174,22 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateCharacterInMovie(int id, int[] characters)
         {
-            if (!MovieExists(id))
+            //Check if id corresponds to a movie
+            if (!_movieService.MovieExists(id))
             {
                 return NotFound();
             }
 
-            //Find the correct movie, with characters included
-            Movie movieToUdate = await _context.Movies
-                .Include(c => c.Characters)
-                .Where(c => c.Id == id)
-                .FirstAsync();
-
-            // Loop through characters, try and assign to movie
-            var charaList = new List<Character>();
-            foreach (int charaId in characters)
-            {
-                Character chara = await _context.Characters.FindAsync(charaId);
-                if (chara == null)
-                    // Record doesnt exist
-                    return BadRequest("Character doesnt exist!");
-
-                charaList.Add(chara);
-            }
-            movieToUdate.Characters = charaList;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _movieService.UpdateMovieCharacterAsync(id, characters);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (KeyNotFoundException)
             {
-                throw;
+                return BadRequest("Invalid certification.");
             }
 
             return NoContent();
-
-        }
-
-        /// <summary>
-        /// Helperfunction to check if movie exists using the context
-        /// </summary>
-        /// <param name="id">id of movie</param>
-        /// <returns>true if exists</returns>
-        private bool MovieExists(int id)
-        {
-            return _context.Movies.Any(e => e.Id == id);
         }
     }
 }

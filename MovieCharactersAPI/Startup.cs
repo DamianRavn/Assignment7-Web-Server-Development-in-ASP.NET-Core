@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using MovieCharactersAPI.Models;
 using System.Reflection;
 using System.IO;
+using MovieCharactersAPI.Services;
 
 namespace MovieCharactersAPI
 {
@@ -34,6 +35,9 @@ namespace MovieCharactersAPI
                 opt => opt.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddControllers();
             services.AddAutoMapper(typeof(Startup));
+            // Add our Services - can also be called repository.
+            services.AddScoped(typeof(IMovieService), typeof(MovieService));
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MovieCharactersAPI", Version = "v1" });
