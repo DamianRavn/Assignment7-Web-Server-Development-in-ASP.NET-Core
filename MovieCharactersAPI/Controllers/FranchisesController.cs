@@ -10,6 +10,7 @@ using MovieCharactersAPI.Models;
 using MovieCharactersAPI.Models.DTO.Character;
 using MovieCharactersAPI.Models.DTO.Franchise;
 using MovieCharactersAPI.Models.DTO.Movie;
+using MovieCharactersAPI.Services;
 
 namespace MovieCharactersAPI.Controllers
 {
@@ -20,17 +21,19 @@ namespace MovieCharactersAPI.Controllers
     [ApiController]
     public class FranchisesController : ControllerBase
     {
-        private readonly CharacterDbContext _context;
+        // Add automapper via DI
         private readonly IMapper _mapper;
+        // We no longer are dependent on the entire context, and it cleans up the controller code
+        private readonly IFranchiseService _franchiseService;
 
         /// <summary>
-        /// Adding context and mapper with dependency injection.
+        /// Adding service and mapper with dependency injection.
         /// </summary>
-        /// <param name="context">The proper context</param>
+        /// <param name="franchiseService">a helper object to deal with async calls</param>
         /// <param name="mapper">The automapper</param>
-        public FranchisesController(CharacterDbContext context, IMapper mapper)
+        public FranchisesController(IMapper mapper, IFranchiseService franchiseService)
         {
-            _context = context;
+            _franchiseService = franchiseService;
             _mapper = mapper;
         }
 
@@ -40,11 +43,9 @@ namespace MovieCharactersAPI.Controllers
         /// <returns>A collection of franchises, movies included</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<FranchiseReadDTO>>> GetFranchise()
+        public async Task<ActionResult<IEnumerable<FranchiseReadDTO>>> GetFranchises()
         {
-            return _mapper.Map<List<FranchiseReadDTO>>(await _context.Franchises
-                .Include(c => c.Movies)
-                .ToListAsync());
+            return _mapper.Map<List<FranchiseReadDTO>>(await _franchiseService.GetAllFranchisesAsync());
         }
 
         /// <summary>
@@ -57,19 +58,16 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<FranchiseReadDTO>> GetFranchise(int id)
         {
-            //Find the franchise in the context
-            var franchise = await _context.Franchises.FindAsync(id);
+            //Find the movie in the context
+            var movie = await _franchiseService.GetSpecificFranchiseAsync(id);
 
-            if (franchise == null)
+            if (movie == null)
             {
-                //franchise was not found
+                //movie was not found
                 return NotFound();
             }
-
-
-
-            //Map franchise to read dto
-            return _mapper.Map<FranchiseReadDTO>(franchise);
+            //Map movie to read dto
+            return _mapper.Map<FranchiseReadDTO>(movie);
         }
 
         /// <summary>
@@ -80,19 +78,10 @@ namespace MovieCharactersAPI.Controllers
         [HttpGet("{id}/movies")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<List<MovieReadDTO>>> GetMoviesInFranchise(int id)
+        public async Task<List<MovieReadDTO>> GetMoviesInFranchise(int id)
         {
-            // Find the franchise in the context
-            var franchise = await _context.Franchises.FindAsync(id);
-
-            if (franchise == null)
-            {
-                // franchise was not found
-                return NotFound();
-            }
-
-            var movies = await _context.Movies.Where(m => m.FranchiseId == id).ToListAsync();
-
+            //find the characters
+            var movies = _franchiseService.GetMovieFranchiseAsync(id).Result;
             // Map movies to read dto
             return _mapper.Map<List<MovieReadDTO>>(movies);
         }
@@ -107,33 +96,7 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<List<CharacterReadDTO>>> GetCharactersInFranchise(int id)
         {
-            // Find the franchise in the context
-            var franchise = await _context.Franchises.FindAsync(id);
-
-            if (franchise == null)
-            {
-                // Franchise was not found
-                return NotFound();
-            }
-
-            // Get the ids of all the movies in the franchise.
-            var movieIds = await _context.Movies
-                .Where(m => m.FranchiseId == id)
-                .Select(m => m.Id)
-                .ToListAsync();
-            List<Character> characters = new List<Character>();
-
-            // Loop over the movie ids and get the characters in each movie.
-            foreach(var movieId in movieIds)
-            {
-                characters.AddRange(await _context.Characters
-                    .Where(c => c.Movies
-                    .Any(m => m.Id == movieId))
-                    .ToListAsync());
-            }
-
-            // Remove duplicate characters.
-            characters = characters.Distinct().ToList();
+            var characters = _franchiseService.GetCharactersFranchiseAsync(id).Result;
 
             // Map characters to read dto.
             return _mapper.Map<List<CharacterReadDTO>>(characters);
@@ -153,33 +116,21 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> PutFranchise(int id, FranchiseUpdateDTO dtoFranchise)
         {
+            //Check if dtoFranchise and id correspond
             if (id != dtoFranchise.Id)
             {
                 return BadRequest();
             }
-            //Map the update dto to a franchise object
-            Franchise domainFranchise = _mapper.Map<Franchise>(dtoFranchise);
-            //Change the state of the franchise to modified
-            _context.Entry(domainFranchise).State = EntityState.Modified;
+            //Check if id corresponds to a movie
+            if (!_franchiseService.FranchiseExists(id))
+            {
+                return NotFound();
+            }
 
-            //Try to save the context (update the sql server)
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!FranchiseExists(id))
-                {
-                    //Check if franchise exists
-                    return NotFound();
-                }
-                else
-                {
-                    //We don't know what the problem is, just stop the program
-                    throw;
-                }
-            }
+            //Map the update dto to a movie object
+            Franchise domainFranchise = _mapper.Map<Franchise>(dtoFranchise);
+            await _franchiseService.UpdateFranchiseAsync(domainFranchise);
+
             //NoContent is returned if nothing went wrong
             return NoContent();
         }
@@ -195,12 +146,10 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<Franchise>> PostFranchise(FranchiseCreateDTO dtoFranchise)
         {
-            //Map the create dto to franchise object
+            //Map the create dto to movie
             Franchise domainFranchise = _mapper.Map<Franchise>(dtoFranchise);
-            //add to context
-            _context.Franchises.Add(domainFranchise);
-            //Framework takes care of the rest when saved
-            await _context.SaveChangesAsync();
+
+            domainFranchise = await _franchiseService.AddFranchiseAsync(domainFranchise);
 
             //Return the movie that has been created
             return CreatedAtAction("GetFranchise", new { id = domainFranchise.Id }, _mapper.Map<FranchiseReadDTO>(domainFranchise));
@@ -216,14 +165,13 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteFranchise(int id)
         {
-            var franchise = await _context.Franchises.FindAsync(id);
-            if (franchise == null)
+            //Check if id corresponds to a movie
+            if (!_franchiseService.FranchiseExists(id))
             {
                 return NotFound();
             }
-            //Remove franchise from context. The framework takes care of the rest when context is saved
-            _context.Franchises.Remove(franchise);
-            await _context.SaveChangesAsync();
+
+            await _franchiseService.DeleteFranchiseAsync(id);
 
             return NoContent();
         }
@@ -240,51 +188,23 @@ namespace MovieCharactersAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateMoviesInFranchise(int id, int[] movies)
         {
-            if (!FranchiseExists(id))
+            //Check if id corresponds to a movie
+            if (!_franchiseService.FranchiseExists(id))
             {
                 return NotFound();
             }
 
-            //Find the correct franchise, with movies included
-            Franchise franchiseToUdate = await _context.Franchises
-                .Include(c => c.Movies)
-                .Where(c => c.Id == id)
-                .FirstAsync();
-
-            // Loop through movies, try and assign to franchise
-            var movieList = new List<Movie>();
-            foreach (int movieId in movies)
-            {
-                Movie movie = await _context.Movies.FindAsync(movieId);
-                if (movie == null)
-                    // Record doesnt exist
-                    return BadRequest("movie doesnt exist!");
-
-                movieList.Add(movie);
-            }
-            franchiseToUdate.Movies = movieList;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _franchiseService.UpdateFranchiseMoviesAsync(id, movies);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (KeyNotFoundException)
             {
-                throw;
+                return BadRequest("Invalid certification.");
             }
 
             return NoContent();
 
-        }
-
-        /// <summary>
-        /// Helperfunction to check if franchise exists using the context
-        /// </summary>
-        /// <param name="id">id of franchise</param>
-        /// <returns>true if exists</returns>
-        private bool FranchiseExists(int id)
-        {
-            return _context.Franchises.Any(e => e.Id == id);
         }
     }
 }
