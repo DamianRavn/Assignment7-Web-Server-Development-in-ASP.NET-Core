@@ -13,7 +13,7 @@ using MovieCharactersAPI.Models.DTO.Movie;
 namespace MovieCharactersAPI.Controllers
 {
     /// <summary>
-    /// The controller holds all the API endpoints for the Movies table
+    /// The controller holds all the API endpoints for the Movies table.
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
@@ -33,11 +33,10 @@ namespace MovieCharactersAPI.Controllers
             _mapper = mapper;
         }
 
-        // GET: api/Movies
         /// <summary>
-        /// Fetches all movies in the Movies table
+        /// Fetches all movies in the Movies table.
         /// </summary>
-        /// <returns>A collection of movies, characters id's included</returns>
+        /// <returns>A collection of movies, characters id's included.</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<MovieReadDTO>>> GetMovie()
@@ -165,12 +164,11 @@ namespace MovieCharactersAPI.Controllers
             return CreatedAtAction("GetMovie", new { id = domainMovie.Id }, _mapper.Map<MovieReadDTO>(domainMovie));
         }
 
-        // DELETE: api/Movies/5
         /// <summary>
-        /// Deletes a movie from the Movies table
+        /// Deletes a movie from the Movies table.
         /// </summary>
-        /// <param name="id">id of movie to delete</param>
-        /// <returns>status code NoContent if successful</returns>
+        /// <param name="id">Id of movie to delete.</param>
+        /// <returns>Status code NoContent if successful.</returns>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

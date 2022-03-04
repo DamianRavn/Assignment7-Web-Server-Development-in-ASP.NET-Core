@@ -12,6 +12,9 @@ using MovieCharactersAPI.Models.DTO.Character;
 
 namespace MovieCharactersAPI.Controllers
 {
+    /// <summary>
+    /// The controller holds all the API endpoints for the Characters table.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class CharactersController : ControllerBase
@@ -19,7 +22,11 @@ namespace MovieCharactersAPI.Controllers
         private readonly CharacterDbContext _context;
         private readonly IMapper _mapper;
 
-        // Adding context and mapper with dependency injection.
+        /// <summary>
+        /// Adding context and mapper with dependency injection.
+        /// </summary>
+        /// <param name="context">The proper context.</param>
+        /// <param name="mapper">The automapper.</param>
         public CharactersController(CharacterDbContext context, IMapper mapper)
         {
             _context = context;
